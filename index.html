@@ -1,421 +1,186 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Roleta — Zonas & Gatilhos • v5.1</title>
-<style>
-  :root{
-    --bg:#0b0f17;
-    --panel:#0e1526;
-    --panel2:#0c1322;
-    --border:#1b2540;
-    --border2:#172135;
-    --text:#e5e7eb;
-    --muted:#9ca3af;
-    --chipBorder:#0a0f1c;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Helvetica Neue,Arial}
-  .wrap{max-width:1280px;margin:18px auto;padding:0 12px}
-  .tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-  .tabbtn{border:1px solid var(--border);background:#0b1220;padding:10px 14px;border-radius:12px;cursor:pointer}
-  .tabbtn.active{background:#111a30;border-color:var(--border2)}
-  .section{display:none}
-  .section.active{display:block}
-  .grid{display:grid;grid-template-columns:420px 1fr;gap:12px}
-  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:12px}
-  h2{margin:0 0 8px 0;font-size:18px}
-  h3{margin:10px 0 6px 0;font-size:14px;color:var(--muted)}
-  label{font-size:13px;color:#93a3b8;margin-right:8px}
-  input[type="text"],input[type="number"]{background:#0f162a;border:1px solid var(--border2);color:var(--text);padding:8px 10px;border-radius:10px;outline:none}
-  input[type="color"]{width:28px;height:28px;border:none;background:transparent;cursor:pointer}
-  .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  .row+.row{margin-top:8px}
-  .btn{background:#121b33;border:1px solid var(--border2);padding:8px 12px;border-radius:10px;color:var(--text);cursor:pointer}
-  .btn.secondary{background:#0f1627}
-  .btn.warn{background:#2a140f;border-color:#5e2a1f}
-  .btn.ok{background:#0f2a1e;border-color:#1a4c38}
-  .chips{display:grid;grid-template-columns:repeat(10,minmax(40px,1fr));gap:6px;margin-top:8px}
-  .chip{display:flex;align-items:center;justify-content:center;min-height:34px;padding:6px 0;border-radius:12px;font-weight:700;letter-spacing:.2px;border:2px solid var(--chipBorder)}
-  .legend{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:8px 0}
-  .lg{display:flex;align-items:center;gap:6px;font-size:12px;color:#cbd5e1}
-  .dot{width:14px;height:14px;border-radius:50%;border:2px solid #0b0f17}
-  .chart{width:100%;height:240px;background:var(--panel2);border:1px solid var(--border2);border-radius:12px;padding:8px}
-  .chart canvas{width:100%;height:100%}
-  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
-  th,td{border-bottom:1px solid #172135;padding:8px 6px;text-align:center}
-  th{position:sticky;top:0;background:#0f1627}
-  .pill{padding:2px 8px;border-radius:999px;border:1px solid var(--border2);background:#0f1627;font-size:12px}
-  .grid36{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
-  .muted{color:var(--muted);font-size:12px}
-</style>
-</head>
-<body>
-  <div class="wrap">
-    <div class="tabs">
-      <div id="tab1" class="tabbtn active">1) Zonas (padrões)</div>
-      <div id="tab2" class="tabbtn">2) Tempo real & Gatilhos</div>
-    </div>
+// PromptForge - Suporte a múltiplos templates por nicho
 
-    <div id="sec1" class="section active">
-      <div class="grid">
-        <div class="card">
-          <h2>Definir padrões das zonas (manual)</h2>
-          <div class="row"><label>Zona A</label><input id="z1A" type="text" placeholder="Ex.: 1 2 3 4 5 6 7 8 9 10 11 12"></div>
-          <div class="row"><label>Zona B</label><input id="z1B" type="text" placeholder="Ex.: 13 14 15 16 17 18 19 20"></div>
-          <div class="row"><label>Zona C</label><input id="z1C" type="text" placeholder="Ex.: 21 ... 36"></div>
+import { useState } from 'react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { motion } from 'framer-motion';
 
-          <h3>Cores (personalize)</h3>
-          <div class="row">
-            <div class="lg"><span class="dot" id="dot1A"></span> A <input id="clr1A" type="color"></div>
-            <div class="lg"><span class="dot" id="dot1B"></span> B <input id="clr1B" type="color"></div>
-            <div class="lg"><span class="dot" id="dot1C"></span> C <input id="clr1C" type="color"></div>
-            <div class="lg"><span class="dot" id="dot1F"></span> Fora <input id="clr1F" type="color"></div>
-          </div>
-          <div class="row"><label>Fora</label><input id="z1F" type="text" placeholder="0 10 20 30"></div>
-          <div class="row">
-            <button id="saveZ1" class="btn ok">Salvar padrões</button>
-            <button id="clearZ1" class="btn warn">Limpar</button>
-          </div>
-          <div class="muted">Pode digitar colado (ex.: "123456789101112") que eu separo automático.</div>
-        </div>
+export default function Home() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [step, setStep] = useState(1);
+  const [savedProjects, setSavedProjects] = useState([]);
+  const [selectedNiche, setSelectedNiche] = useState('default');
+  const [formData, setFormData] = useState({
+    nomeProjeto: '',
+    problemaResolvido: '',
+    publicoAlvo: '',
+    funcionalidades: '',
+    referenciasVisuais: '',
+    estiloVisual: '',
+    fontePrincipal: '',
+  });
 
-        <div class="card">
-          <h2>Sequência para estudar padrões</h2>
-          <div class="row">
-            <input id="z1Input" type="number" min="0" max="36" placeholder="0–36">
-            <button id="z1Add" class="btn">Adicionar</button>
-            <button id="z1Undo" class="btn secondary">Desfazer</button>
-            <button id="z1Clear" class="btn warn">Zerar</button>
-            <button id="z1Export" class="btn secondary" style="margin-left:auto">Exportar CSV</button>
-          </div>
-          <div id="z1Chips" class="chips"></div>
+  const isAdmin = email === 'admin@promptforge.com';
 
-          <div class="row" style="margin-top:10px">
-            <label>Janela</label><input id="z1Win" type="number" min="5" max="5000" value="120" style="width:100px">
-            <button id="z1Refresh" class="btn secondary">Atualizar gráficos</button>
-            <span id="z1WinInfo" class="muted"></span>
-          </div>
-
-          <h3>Probabilidade atual por região (0–100%)</h3>
-          <div class="chart"><canvas id="probChart"></canvas></div>
-
-          <h3>Rolling — contagem na janela</h3>
-          <div class="chart"><canvas id="barsChart"></canvas></div>
-        </div>
-      </div>
-    </div>
-
-    <div id="sec2" class="section">
-      <div class="grid">
-        <div class="card">
-          <h2>Tempo real — sequência & cores</h2>
-          <div class="row"><label>Zona A</label><input id="z2A" type="text" placeholder="números A"></div>
-          <div class="row"><label>Zona B</label><input id="z2B" type="text" placeholder="números B"></div>
-          <div class="row"><label>Zona C</label><input id="z2C" type="text" placeholder="números C"></div>
-          <div class="row"><label>Fora</label><input id="z2F" type="text" placeholder="0 10 20 30"></div>
-          <div class="row">
-            <div class="lg"><span class="dot" id="dot2A"></span> A <input id="clr2A" type="color"></div>
-            <div class="lg"><span class="dot" id="dot2B"></span> B <input id="clr2B" type="color"></div>
-            <div class="lg"><span class="dot" id="dot2C"></span> C <input id="clr2C" type="color"></div>
-            <div class="lg"><span class="dot" id="dot2F"></span> Fora <input id="clr2F" type="color"></div>
-          </div>
-          <div class="row">
-            <button id="z2Copy" class="btn secondary">Copiar padrões da área 1</button>
-            <button id="saveZ2" class="btn ok">Salvar</button>
-          </div>
-
-          <h3>Adicionar número (tempo real)</h3>
-          <div class="row">
-            <input id="z2Input" type="number" min="0" max="36" placeholder="0–36">
-            <button id="z2Add" class="btn">Adicionar</button>
-            <button id="z2Undo" class="btn secondary">Desfazer</button>
-            <button id="z2Clear" class="btn warn">Zerar</button>
-            <button id="z2Export" class="btn secondary" style="margin-left:auto">Exportar CSV</button>
-          </div>
-          <div id="z2Chips" class="chips"></div>
-        </div>
-
-        <div class="card">
-          <h2>Gatilhos — Antes & Depois + Top‑8</h2>
-          <div class="row">
-            <label>Gatilho</label><input id="gtNum" type="number" min="0" max="36" value="0" style="width:90px">
-            <button id="gtGo" class="btn">Calcular</button>
-            <button id="gtCopy" class="btn secondary">Copiar 8 fichas</button>
-            <button id="gtExportAll" class="btn secondary" style="margin-left:auto">Exportar tudo (CSV)</button>
-          </div>
-
-          <h3>Quem chamou o gatilho (ANTES do N)</h3>
-          <div id="gtBeforeTop" class="chips"></div>
-          <table id="gtBeforeTbl"><thead><tr><th>Número</th><th>Contagem</th><th>%</th></tr></thead><tbody></tbody></table>
-
-          <h3>Quem o gatilho chamou (DEPOIS do N)</h3>
-          <div id="gtAfterTop" class="chips"></div>
-          <table id="gtAfterTbl"><thead><tr><th>Número</th><th>Contagem</th><th>%</th></tr></thead><tbody></tbody></table>
-
-          <h3>Pares ao redor do gatilho (ANTES → DEPOIS)</h3>
-          <div id="gtPairsTop" class="chips"></div>
-          <table id="gtPairsTbl"><thead><tr><th>Antes</th><th>Gatilho</th><th>Depois</th><th>Contagem</th></tr></thead><tbody></tbody></table>
-        </div>
-      </div>
-    </div>
-  </div>
-
-<script>
-// ========= Util =========
-const REDS = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
-function rouletteColor(n){ if(n===0) return 'green'; return REDS.has(n)?'red':'black'; }
-function parseNumsSmart(str){
-  if(!str) return new Set();
-  const parts = str.trim().split(/[^0-9]+/).filter(Boolean);
-  let arr = parts.map(p=>parseInt(p,10)).filter(n=>Number.isInteger(n));
-  const ok = arr.every(n => n>=0 && n<=36);
-  if(parts.length>1 && ok){ return new Set(arr); }
-  const s = str.replace(/\D/g,'');
-  const out = [];
-  for(let i=0;i<s.length;){
-    if(i+1<s.length){
-      const two = parseInt(s.substring(i,i+2),10);
-      if(two>=10 && two<=36){ out.push(two); i+=2; continue; }
+  const handleLogin = () => {
+    if (email && senha) {
+      setIsLoggedIn(true);
+      setIsSubscribed(email === 'admin@promptforge.com' ? true : false);
     }
-    const one = parseInt(s.substring(i,i+1),10);
-    if(one>=0 && one<=9) out.push(one);
-    i+=1;
-  }
-  return new Set(out);
-}
-function contrastColor(hex){ if(!hex) return '#0b0f17';
-  const c = hex.replace('#',''); const r=parseInt(c.slice(0,2),16), g=parseInt(c.slice(2,4),16), b=parseInt(c.slice(4,6),16);
-  const L=(0.2126*r+0.7152*g+0.0722*b)/255; return L>0.6?'#0b0f17':'#f8fafc';
-}
-function el(tag,attrs={},children=[]){ const e=document.createElement(tag); Object.entries(attrs).forEach(([k,v])=>{ if(k==='class')e.className=v; else if(k==='style')e.setAttribute('style',v); else e[k]=v; }); children.forEach(c=> e.appendChild(typeof c==='string'?document.createTextNode(c):c)); return e; }
-function csvDownload(filename, rows){
-  const text = rows.map(r=>r.map(v=>{ const s=String(v??''); return /[;"\n,]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; }).join(';')).join('\n');
-  const blob=new Blob([text],{type:'text/csv;charset=utf-8;'}); const url=URL.createObjectURL(blob);
-  const a=document.createElement('a'); a.href=url; a.download=filename; a.click(); setTimeout(()=>URL.revokeObjectURL(url),1000);
-}
-function zoneOf(n, sets){ if(sets.F.has(n)) return 'F'; if(sets.A.has(n)) return 'A'; if(sets.B.has(n)) return 'B'; if(sets.C.has(n)) return 'C'; return null; }
-function chip(n,colors,sets){ const z=zoneOf(n,sets); const bg=z?colors[z]:'#0f162a'; const fg=contrastColor(bg); const d=el('div',{class:'chip',style:`background:${bg};color:${fg}`},[String(n)]); return d; }
-function chipsRender(container, arr, colors, sets){ container.innerHTML=''; arr.forEach(n=> container.appendChild(chip(n,colors,sets))); }
-
-// ========= Estado =========
-const S={
-  z1:{A:new Set(),B:new Set(),C:new Set(),F:new Set(),colors:{A:'#2563eb',B:'#facc15',C:'#ef4444',F:'#10b981'},seq:[]},
-  z2:{A:new Set(),B:new Set(),C:new Set(),F:new Set(),colors:{A:'#2563eb',B:'#facc15',C:'#ef4444',F:'#10b981'},seq:[]},
-};
-function saveLS(k,obj){ localStorage.setItem(k,JSON.stringify(obj)); }
-function loadLS(k,f){ try{return JSON.parse(localStorage.getItem(k))??f;}catch(e){return f;} }
-
-// ========= Charts simples (canvas) =========
-function barChart(canvas, labels, values, colors, max=1){
-  const ctx=canvas.getContext('2d'); const W=canvas.width=canvas.clientWidth||640, H=canvas.height=canvas.clientHeight||240;
-  ctx.clearRect(0,0,W,H);
-  const pad=28; const innerW=W-2*pad; const innerH=H-2*pad;
-  ctx.strokeStyle='#1f2937'; ctx.lineWidth=1;
-  for(let i=0;i<=5;i++){ const y=pad+innerH*i/5; ctx.beginPath(); ctx.moveTo(pad,y); ctx.lineTo(W-pad,y); ctx.stroke(); }
-  const n=values.length; const barW=innerW/n*0.6; const gap=innerW/n*0.4;
-  for(let i=0;i<n;i++){
-    const x=pad + i*(barW+gap) + gap/2;
-    const h=innerH * (values[i]/max);
-    const y=pad + innerH - h;
-    ctx.fillStyle=colors[i]; ctx.beginPath(); ctx.roundRect(x,y,barW,h,6); ctx.fill();
-    ctx.fillStyle='#cbd5e1'; ctx.font='12px sans-serif'; ctx.textAlign='center';
-    ctx.fillText(labels[i], x+barW/2, H-8);
-    ctx.fillStyle='#f3f4f6'; ctx.fillText((Math.round(values[i]*100)/100).toString(), x+barW/2, y-4);
-  }
-}
-function probChart(canvas, labels, percents, colors){
-  const ctx=canvas.getContext('2d'); const W=canvas.width=canvas.clientWidth||640, H=canvas.height=canvas.clientHeight||240;
-  ctx.clearRect(0,0,W,H);
-  const pad=28; const innerW=W-2*pad; const innerH=H-2*pad;
-  ctx.strokeStyle='#1f2937'; ctx.lineWidth=1;
-  for(let i=0;i<=5;i++){ const y=pad+innerH*i/5; ctx.beginPath(); ctx.moveTo(pad,y); ctx.lineTo(W-pad,y); ctx.stroke();
-    const val=100 - i*20; ctx.fillStyle='#94a3b8'; ctx.font='11px sans-serif'; ctx.fillText(val+'%', 6, y+4); }
-  const n=percents.length; const barW=innerW/n*0.6; const gap=innerW/n*0.4;
-  for(let i=0;i<n;i++){
-    const x=pad + i*(barW+gap) + gap/2;
-    const h=innerH * (percents[i]/100);
-    const y=pad + innerH - h;
-    ctx.fillStyle=colors[i]; ctx.beginPath(); ctx.roundRect(x,y,barW,h,6); ctx.fill();
-    ctx.fillStyle='#cbd5e1'; ctx.font='12px sans-serif'; ctx.textAlign='center';
-    ctx.fillText(labels[i], x+barW/2, H-8);
-    ctx.fillStyle='#f3f4f6'; ctx.fillText((Math.round(percents[i]*10)/10)+'%', x+barW/2, y-4);
-  }
-}
-
-// ========= Tabs =========
-function initTabs(){
-  const t1=document.getElementById('tab1'), t2=document.getElementById('tab2');
-  const s1=document.getElementById('sec1'), s2=document.getElementById('sec2');
-  t1.onclick=()=>{t1.classList.add('active');t2.classList.remove('active');s1.classList.add('active');s2.classList.remove('active'); setTimeout(()=>{ if(window.redrawArea1) window.redrawArea1(); },50); };
-  t2.onclick=()=>{t2.classList.add('active');t1.classList.remove('active');s2.classList.add('active');s1.classList.remove('active'); };
-}
-
-// ========= Load/Populate =========
-function setDots(area){ ['A','B','C','F'].forEach(k=> document.getElementById(`dot${area}${k}`).style.background=S[`z${area}`].colors[k]); }
-function loadFromLS(){
-  const v1=loadLS('roleta_v51_z1',null), v2=loadLS('roleta_v51_z2',null);
-  if(v1){ S.z1.A=new Set(v1.A||[]); S.z1.B=new Set(v1.B||[]); S.z1.C=new Set(v1.C||[]); S.z1.F=new Set(v1.F||[]); S.z1.colors=v1.colors||S.z1.colors; S.z1.seq=v1.seq||[]; }
-  if(v2){ S.z2.A=new Set(v2.A||[]); S.z2.B=new Set(v2.B||[]); S.z2.C=new Set(v2.C||[]); S.z2.F=new Set(v2.F||[]); S.z2.colors=v2.colors||S.z2.colors; S.z2.seq=v2.seq||[]; }
-}
-function populateInputs(){
-  document.getElementById('z1A').value=[...S.z1.A].join(' ');
-  document.getElementById('z1B').value=[...S.z1.B].join(' ');
-  document.getElementById('z1C').value=[...S.z1.C].join(' ');
-  document.getElementById('z1F').value=[...S.z1.F].join(' ');
-  document.getElementById('clr1A').value=S.z1.colors.A;
-  document.getElementById('clr1B').value=S.z1.colors.B;
-  document.getElementById('clr1C').value=S.z1.colors.C;
-  document.getElementById('clr1F').value=S.z1.colors.F; setDots(1);
-  document.getElementById('z2A').value=[...S.z2.A].join(' ');
-  document.getElementById('z2B').value=[...S.z2.B].join(' ');
-  document.getElementById('z2C').value=[...S.z2.C].join(' ');
-  document.getElementById('z2F').value=[...S.z2.F].join(' ');
-  document.getElementById('clr2A').value=S.z2.colors.A;
-  document.getElementById('clr2B').value=S.z2.colors.B;
-  document.getElementById('clr2C').value=S.z2.colors.C;
-  document.getElementById('clr2F').value=S.z2.colors.F; setDots(2);
-}
-
-// ========= Área 1 =========
-function bindArea1(){
-  const chips=document.getElementById('z1Chips'), win=document.getElementById('z1Win');
-  function metrics(){
-    const w=Math.max(5,Math.min(parseInt(win.value||'120',10),5000));
-    const slice=S.z1.seq.length<=w?S.z1.seq.slice():S.z1.seq.slice(S.z1.seq.length-w);
-    const c={A:0,B:0,C:0,F:0}; slice.forEach(n=>{ const z=zoneOf(n,S.z1); if(z) c[z]++; });
-    const total=slice.length||1;
-    const p={A:100*c.A/total, B:100*c.B/total, C:100*c.C/total, F:100*c.F/total};
-    return {slice,c,total,p};
-  }
-  function redraw(){
-    chipsRender(chips,S.z1.seq,S.z1.colors,S.z1);
-    const {slice,c,total,p}=metrics();
-    const labels=['A','B','C','F']; const cols=[S.z1.colors.A,S.z1.colors.B,S.z1.colors.C,S.z1.colors.F];
-    // Probabilidade (0-100%)
-    probChart(document.getElementById('probChart'), labels, [p.A,p.B,p.C,p.F], cols);
-    // Barras da janela (contagem)
-    barChart(document.getElementById('barsChart'), labels, [c.A,c.B,c.C,c.F], cols, Math.max(1,c.A,c.B,c.C,c.F));
-    document.getElementById('z1WinInfo').textContent=`Janela: ${slice.length} | A ${c.A} • B ${c.B} • C ${c.C} • Fora ${c.F}`;
-  }
-  window.redrawArea1=redraw;
-
-  document.getElementById('z1Add').onclick=()=>{
-    const n=parseInt(document.getElementById('z1Input').value,10);
-    if(Number.isInteger(n)&&n>=0&&n<=36){ S.z1.seq.push(n); saveLS('roleta_v51_z1',{A:[...S.z1.A],B:[...S.z1.B],C:[...S.z1.C],F:[...S.z1.F],colors:S.z1.colors,seq:S.z1.seq}); document.getElementById('z1Input').value=''; redraw(); }
   };
-  document.getElementById('z1Input').addEventListener('keydown',(e)=>{ if(e.key==='Enter')document.getElementById('z1Add').click(); });
-  document.getElementById('z1Undo').onclick=()=>{ S.z1.seq.pop(); saveLS('roleta_v51_z1',{A:[...S.z1.A],B:[...S.z1.B],C:[...S.z1.C],F:[...S.z1.F],colors:S.z1.colors,seq:S.z1.seq}); redraw(); };
-  document.getElementById('z1Clear').onclick=()=>{ if(confirm('Limpar sequência da Área 1?')){ S.z1.seq=[]; saveLS('roleta_v51_z1',{A:[...S.z1.A],B:[...S.z1.B],C:[...S.z1.C],F:[...S.z1.F],colors:S.z1.colors,seq:S.z1.seq}); redraw(); } };
-  document.getElementById('z1Refresh').onclick=redraw;
-  document.getElementById('z1Export').onclick=()=>{
-    const rows=[['idx','numero','zona']]; S.z1.seq.forEach((n,i)=> rows.push([i+1,n,zoneOf(n,S.z1)??''])); csvDownload('zonas_area1.csv',rows);
-  };
-  document.getElementById('saveZ1').onclick=()=>{
-    S.z1.A=parseNumsSmart(document.getElementById('z1A').value);
-    S.z1.B=parseNumsSmart(document.getElementById('z1B').value);
-    S.z1.C=parseNumsSmart(document.getElementById('z1C').value);
-    S.z1.F=parseNumsSmart(document.getElementById('z1F').value||'0 10 20 30');
-    S.z1.colors.A=document.getElementById('clr1A').value;
-    S.z1.colors.B=document.getElementById('clr1B').value;
-    S.z1.colors.C=document.getElementById('clr1C').value;
-    S.z1.colors.F=document.getElementById('clr1F').value;
-    setDots(1); saveLS('roleta_v51_z1',{A:[...S.z1.A],B:[...S.z1.B],C:[...S.z1.C],F:[...S.z1.F],colors:S.z1.colors,seq:S.z1.seq}); redraw();
-  };
-  document.getElementById('clearZ1').onclick=()=>{
-    if(!confirm('Zerar A/B/C/F da Área 1?'))return;
-    S.z1.A.clear();S.z1.B.clear();S.z1.C.clear();S.z1.F=parseNumsSmart('0 10 20 30');
-    document.getElementById('z1A').value='';document.getElementById('z1B').value='';document.getElementById('z1C').value='';document.getElementById('z1F').value='0 10 20 30';
-    saveLS('roleta_v51_z1',{A:[...S.z1.A],B:[...S.z1.B],C:[...S.z1.C],F:[...S.z1.F],colors:S.z1.colors,seq:S.z1.seq}); redraw();
-  };
-  ['clr1A','clr1B','clr1C','clr1F'].forEach(id=> document.getElementById(id).addEventListener('input',(e)=>{ const k=id.slice(-1); document.getElementById('dot1'+k).style.background=e.target.value; redraw(); }));
 
-  redraw();
+  const handleSubscribe = () => {
+    alert('🔗 Redirecionando para checkout Stripe (simulado)');
+    setIsSubscribed(true);
+  };
+
+  const handleChange = (field, value) => {
+    setFormData({ ...formData, [field]: value });
+  };
+
+  const nextStep = () => setStep((s) => s + 1);
+  const prevStep = () => setStep((s) => s - 1);
+
+  const niches = {
+    default: (data) => `🧠 Prompt Estratégico\n\n🔹 Projeto: ${data.nomeProjeto}\n🔹 Problema resolvido: ${data.problemaResolvido}\n🔹 Público-alvo: ${data.publicoAlvo}\n🔹 Funcionalidades: ${data.funcionalidades}\n🔹 Visual: ${data.estiloVisual} com fonte ${data.fontePrincipal}\n🔹 Referência visual: ${data.referenciasVisuais}`,
+
+    barbearia: (data) => `Crie um sistema de agendamento de horários para uma barbearia chamado ${data.nomeProjeto}.\nO sistema deve resolver o problema: ${data.problemaResolvido}.\nO público são: ${data.publicoAlvo}.\nFuncionalidades: ${data.funcionalidades}.\nUse o estilo visual ${data.estiloVisual}, com a fonte ${data.fontePrincipal}.\nInspiração visual: ${data.referenciasVisuais}.`,
+
+    clinica: (data) => `Construa um painel de marcações online para uma clínica estética, nome: ${data.nomeProjeto}.\nProblema resolvido: ${data.problemaResolvido}.\nPara: ${data.publicoAlvo}.\nInclui: ${data.funcionalidades}.\nDesign ${data.estiloVisual}, fonte ${data.fontePrincipal}.\nReferências: ${data.referenciasVisuais}`
+  };
+
+  const generatePrompt = () => {
+    const builder = niches[selectedNiche] || niches.default;
+    return builder(formData);
+  };
+
+  const saveProject = () => {
+    const prompt = generatePrompt();
+    setSavedProjects([...savedProjects, { ...formData, prompt, niche: selectedNiche }]);
+    alert('✅ Projeto salvo com sucesso!');
+    setFormData({
+      nomeProjeto: '',
+      problemaResolvido: '',
+      publicoAlvo: '',
+      funcionalidades: '',
+      referenciasVisuais: '',
+      estiloVisual: '',
+      fontePrincipal: '',
+    });
+    setStep(1);
+  };
+
+  if (!isLoggedIn) {
+    return (
+      <main className="min-h-screen flex items-center justify-center p-4">
+        <Card className="w-full max-w-sm">
+          <CardContent className="p-6 space-y-4">
+            <h2 className="text-xl font-bold">Acessar PromptForge</h2>
+            <Input placeholder="Seu e-mail" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <Input type="password" placeholder="Senha" value={senha} onChange={(e) => setSenha(e.target.value)} />
+            <Button className="w-full" onClick={handleLogin}>Entrar</Button>
+          </CardContent>
+        </Card>
+      </main>
+    );
+  }
+
+  if (!isSubscribed && !isAdmin) {
+    return (
+      <main className="min-h-screen flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-6 space-y-4">
+            <h2 className="text-xl font-bold">Assine para usar o PromptForge</h2>
+            <p>Este aplicativo é exclusivo para assinantes. Acesse prompts ilimitados com apenas R$29/mês.</p>
+            <Button className="w-full" onClick={handleSubscribe}>Assinar Agora</Button>
+          </CardContent>
+        </Card>
+      </main>
+    );
+  }
+
+  if (isAdmin) {
+    return (
+      <main className="min-h-screen p-4">
+        <h1 className="text-2xl font-bold mb-4">Painel do Admin 👑</h1>
+        <p className="mb-2">Total de projetos gerados: {savedProjects.length}</p>
+        <div className="space-y-4">
+          {savedProjects.map((proj, i) => (
+            <Card key={i}>
+              <CardContent className="p-4">
+                <p className="text-sm text-muted-foreground mb-2">[{proj.niche}] {proj.nomeProjeto}</p>
+                <pre className="text-xs whitespace-pre-wrap">{proj.prompt}</pre>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </main>
+    );
+  }
+
+  const nicheOptions = [
+    { value: 'default', label: 'Genérico' },
+    { value: 'barbearia', label: 'Barbearia' },
+    { value: 'clinica', label: 'Clínica Estética' }
+  ];
+
+  return (
+    <main className="min-h-screen p-4 flex flex-col items-center justify-center bg-background">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-xl space-y-4"
+      >
+        <Card>
+          <CardContent className="p-6 space-y-4">
+            <h2 className="text-xl font-bold">Etapa {step} de {steps.length}</h2>
+            <div>
+              <label className="text-sm font-medium">Escolha o nicho do projeto</label>
+              <select
+                className="w-full border rounded p-2 mt-1"
+                value={selectedNiche}
+                onChange={(e) => setSelectedNiche(e.target.value)}
+              >
+                {nicheOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <p className="mb-2 font-medium">{steps[step - 1].label}</p>
+              <Input
+                placeholder={steps[step - 1].placeholder}
+                value={formData[steps[step - 1].field]}
+                onChange={(e) => handleChange(steps[step - 1].field, e.target.value)}
+              />
+            </div>
+            <div className="flex justify-between">
+              <Button onClick={prevStep} disabled={step === 1}>Voltar</Button>
+              {step < steps.length ? (
+                <Button onClick={nextStep}>Próxima</Button>
+              ) : (
+                <Button onClick={saveProject}>Salvar e Gerar Prompt</Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="w-full">
+          <h3 className="text-lg font-semibold mb-2">Seus projetos</h3>
+          {savedProjects.map((proj, i) => (
+            <Card key={i} className="mb-2">
+              <CardContent className="p-4">
+                <p className="font-medium text-sm">[{proj.niche}] {proj.nomeProjeto}</p>
+                <pre className="text-xs whitespace-pre-wrap mt-2">{proj.prompt}</pre>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </motion.div>
+    </main>
+  );
 }
-
-// ========= Área 2 (tempo real + gatilhos com antes/depois/pares) =========
-function bindArea2(){
-  const chips=document.getElementById('z2Chips');
-  function redraw(){ chipsRender(chips,S.z2.seq,S.z2.colors,S.z2); }
-  document.getElementById('z2Add').onclick=()=>{
-    const n=parseInt(document.getElementById('z2Input').value,10);
-    if(Number.isInteger(n)&&n>=0&&n<=36){ S.z2.seq.push(n); saveLS('roleta_v51_z2',{A:[...S.z2.A],B:[...S.z2.B],C:[...S.z2.C],F:[...S.z2.F],colors:S.z2.colors,seq:S.z2.seq}); document.getElementById('z2Input').value=''; redraw(); }
-  };
-  document.getElementById('z2Input').addEventListener('keydown',(e)=>{ if(e.key==='Enter')document.getElementById('z2Add').click(); });
-  document.getElementById('z2Undo').onclick=()=>{ S.z2.seq.pop(); saveLS('roleta_v51_z2',{A:[...S.z2.A],B:[...S.z2.B],C:[...S.z2.C],F:[...S.z2.F],colors:S.z2.colors,seq:S.z2.seq}); redraw(); };
-  document.getElementById('z2Clear').onclick=()=>{ if(confirm('Limpar sequência do Tempo real?')){ S.z2.seq=[]; saveLS('roleta_v51_z2',{A:[...S.z2.A],B:[...S.z2.B],C:[...S.z2.C],F:[...S.z2.F],colors:S.z2.colors,seq:S.z2.seq}); redraw(); } };
-  document.getElementById('z2Export').onclick=()=>{
-    const rows=[['idx','numero','zona']]; S.z2.seq.forEach((n,i)=> rows.push([i+1,n,zoneOf(n,S.z2)??''])); csvDownload('tempo_real.csv',rows);
-  };
-  document.getElementById('saveZ2').onclick=()=>{
-    S.z2.A=parseNumsSmart(document.getElementById('z2A').value);
-    S.z2.B=parseNumsSmart(document.getElementById('z2B').value);
-    S.z2.C=parseNumsSmart(document.getElementById('z2C').value);
-    S.z2.F=parseNumsSmart(document.getElementById('z2F').value||'0 10 20 30');
-    S.z2.colors.A=document.getElementById('clr2A').value;
-    S.z2.colors.B=document.getElementById('clr2B').value;
-    S.z2.colors.C=document.getElementById('clr2C').value;
-    S.z2.colors.F=document.getElementById('clr2F').value; setDots(2);
-    saveLS('roleta_v51_z2',{A:[...S.z2.A],B:[...S.z2.B],C:[...S.z2.C],F:[...S.z2.F],colors:S.z2.colors,seq:S.z2.seq}); redraw();
-  };
-  document.getElementById('z2Copy').onclick=()=>{
-    S.z2.A=new Set(S.z1.A); S.z2.B=new Set(S.z1.B); S.z2.C=new Set(S.z1.C); S.z2.F=new Set(S.z1.F);
-    S.z2.colors={...S.z1.colors}; populateInputs(); redraw(); saveLS('roleta_v51_z2',{A:[...S.z2.A],B:[...S.z2.B],C:[...S.z2.C],F:[...S.z2.F],colors:S.z2.colors,seq:S.z2.seq});
-  };
-  ['clr2A','clr2B','clr2C','clr2F'].forEach(id=> document.getElementById(id).addEventListener('input',(e)=>{ const k=id.slice(-1); document.getElementById('dot2'+k).style.background=e.target.value; }));
-
-  // --------- Gatilhos ---------
-  function calcBeforeAfter(num){
-    const seq=S.z2.seq;
-    const before=Array(37).fill(0), after=Array(37).fill(0);
-    const pairs=new Map(); // key "a>b"
-    for(let i=0;i<seq.length;i++){
-      if(seq[i]===num){
-        if(i>0){ before[seq[i-1]]++; }
-        if(i<seq.length-1){ after[seq[i+1]]++; if(i>0){ const key=seq[i-1]+'>'+seq[i+1]; pairs.set(key,(pairs.get(key)||0)+1); } }
-      }
-    }
-    const sumB=before.reduce((a,b)=>a+b,0)||1, sumA=after.reduce((a,b)=>a+b,0)||1;
-    const rankB=before.map((c,n)=>({n,c,p:100*c/sumB})).sort((a,b)=> b.c-a.c || b.p-a.p || a.n-b.n);
-    const rankA=after .map((c,n)=>({n,c,p:100*c/sumA})).sort((a,b)=> b.c-a.c || b.p-a.p || a.n-b.n);
-    const arrPairs=[...pairs.entries()].map(([k,c])=>{ const [a,b]=k.split('>').map(Number); return {a,b,c}; }).sort((x,y)=> y.c-x.c || x.a-y.a || x.b-y.b);
-    return {rankBefore:rankB, rankAfter:rankA, pairs:arrPairs};
-  }
-  function fillTable(tbodyId, rows){
-    const tb=document.querySelector('#'+tbodyId+' tbody'); tb.innerHTML='';
-    rows.forEach(r=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${r.n}</td><td>${r.c}</td><td>${(Math.round(r.p*100)/100).toFixed(2)}</td>`; tb.appendChild(tr); });
-  }
-  function renderTopChips(containerId, arr){ const box=document.getElementById(containerId); box.innerHTML=''; arr.slice(0,8).filter(x=>x.c>0).forEach(x=> box.appendChild(chip(x.n,S.z2.colors,S.z2))); }
-  function renderPairsTop(containerId, arr){ const box=document.getElementById(containerId); box.innerHTML=''; arr.slice(0,12).forEach(x=>{ const d=el('div',{class:'chip',style:'background:#0f162a;color:#e5e7eb'},[`${x.a} → ${x.b} (${x.c})`]); box.appendChild(d); }); }
-  function fillPairsTable(id, arr){ const tb=document.querySelector('#'+id+' tbody'); tb.innerHTML=''; arr.forEach(x=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${x.a}</td><td class="pill">gatilho</td><td>${x.b}</td><td>${x.c}</td>`; tb.appendChild(tr); }); }
-
-  function renderGatilho(num){
-    const {rankBefore,rankAfter,pairs}=calcBeforeAfter(num);
-    renderTopChips('gtBeforeTop',rankBefore);
-    fillTable('gtBeforeTbl',rankBefore);
-    renderTopChips('gtAfterTop',rankAfter);
-    fillTable('gtAfterTbl',rankAfter);
-    renderPairsTop('gtPairsTop',pairs);
-    fillPairsTable('gtPairsTbl',pairs);
-
-    document.getElementById('gtCopy').onclick=()=>{ const text=rankAfter.slice(0,8).map(x=>x.n).join(' '); navigator.clipboard.writeText(text); alert('Copiado: '+text); };
-    document.getElementById('gtExportAll').onclick=()=>{
-      const rows1=[['ANTES (quem chama o gatilho)'],['num','cont','%']]; rankBefore.forEach(x=>rows1.push([x.n,x.c,(Math.round(x.p*100)/100).toFixed(2)]));
-      const rows2=[[],['DEPOIS (quem o gatilho chama)'],['num','cont','%']]; rankAfter.forEach(x=>rows2.push([x.n,x.c,(Math.round(x.p*100)/100).toFixed(2)]));
-      const rows3=[[],['PARES (antes→depois ao redor do gatilho)'],['antes','depois','cont']]; pairs.forEach(x=>rows3.push([x.a,x.b,x.c]));
-      const all=[...rows1,...rows2,...rows3]; csvDownload(`gatilho_${num}_antes_depois_pares.csv`,all);
-    };
-  }
-  document.getElementById('gtGo').onclick=()=>{ const n=parseInt(document.getElementById('gtNum').value,10); if(Number.isInteger(n)&&n>=0&&n<=36) renderGatilho(n); };
-  renderGatilho(0);
-
-  redraw();
-}
-
-// ========= Start =========
-function start(){ initTabs(); loadFromLS(); populateInputs(); bindArea1(); bindArea2(); }
-window.addEventListener('DOMContentLoaded',start);
-</script>
-</body>
-</html>
